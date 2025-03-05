@@ -117,9 +117,11 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => response.json())
     .then(data => {
-      // Ожидаем, что сервер вернёт id_token, access_token и refresh_token
-      if (data.id_token) {
-        localStorage.setItem('authToken', data.id_token);
+      // Ожидаем, что сервер вернёт access_token, refresh_token и id_token (если нужно)
+      if (data.access_token) {
+        // Сохраняем access_token для работы с Google API
+        localStorage.setItem('authToken', data.access_token);
+        // Сохраняем refresh_token, если он пришёл
         if (data.refresh_token) {
           localStorage.setItem('refreshToken', data.refresh_token);
         }
@@ -129,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Очистка query-параметров из URL
         window.history.replaceState({}, document.title, "/");
       } else {
-        console.error("Не получен id_token:", data);
+        console.error("Не получен access_token:", data);
       }
     })
     .catch(err => {
