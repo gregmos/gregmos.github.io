@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const celeryProgressBar = document.getElementById('celeryProgressBar');
   const celeryProgressText = document.getElementById('celeryProgressText');
 
-  // Добавляем кнопку для OAuth входа (уже присутствует в index.html)
+  // Кнопка для OAuth входа (должна быть добавлена в index.html)
   const oauthSignInBtn = document.getElementById('oauthSignInBtn');
 
   let celeryIntervalId = null;
@@ -59,14 +59,14 @@ document.addEventListener('DOMContentLoaded', function() {
     settingsSection.style.display = 'block';
   }
 
-  // PKCE: функция генерации случайной строки (code_verifier)
+  // PKCE: генерация случайной строки (code_verifier)
   function generateRandomString(length) {
     const array = new Uint8Array(length);
     window.crypto.getRandomValues(array);
     return Array.from(array, dec => ('0' + dec.toString(16)).slice(-2)).join('');
   }
 
-  // PKCE: генерация code_challenge по алгоритму SHA-256 и преобразование в URL-safe base64
+  // PKCE: генерация code_challenge по алгоритму SHA-256 с преобразованием в URL-safe base64
   async function generateCodeChallenge(codeVerifier) {
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
@@ -84,10 +84,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Генерируем PKCE-параметры
       const codeVerifier = generateRandomString(64);
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-      // Сохраняем codeVerifier для последующего обмена на токены
+      // Сохраняем codeVerifier для последующего обмена
       localStorage.setItem('codeVerifier', codeVerifier);
 
-      // Задайте свой redirect_uri (он должен быть зарегистрирован в Google Console)
+      // Укажите ваш redirect_uri, зарегистрированный в Google Console
       const redirectUri = 'https://gregmos.github.io/';
 
       const params = new URLSearchParams({
@@ -106,29 +106,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Если пользователь вернулся с параметром code (редирект после авторизации)
+  // Обработка возврата с параметром code (редирект после авторизации)
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
   if (code) {
     const codeVerifier = localStorage.getItem('codeVerifier');
-    // Обменяем код на токены через серверный эндпоинт
-    fetch(' ', {
+    // Обменяем код на токены через серверный endpoint
+    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/exchange_token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: code, code_verifier: codeVerifier })
     })
     .then(response => response.json())
     .then(data => {
-      // Ожидаем, что сервер вернёт id_token, access_token и refresh_token.
-      // Сохраняем id_token для последующих API вызовов.
-      localStorage.setItem('authToken', data.id_token);
-      // Можно при желании сохранить и refresh_token (но лучше использовать его на сервере)
-      // Переходим к основному экрану
-      showMainScreen();
-      loadUserCredits();
-      loadProjects();
-      // Очистка параметра кода из URL
-      window.history.replaceState({}, document.title, "/");
+      // Ожидаем, что сервер вернёт id_token, access_token и refresh_token
+      if (data.id_token) {
+        localStorage.setItem('authToken', data.id_token);
+        showMainScreen();
+        loadUserCredits();
+        loadProjects();
+        // Очистка query-параметров из URL
+        window.history.replaceState({}, document.title, "/");
+      } else {
+        console.error("Не получен id_token:", data);
+      }
     })
     .catch(err => {
       console.error('Ошибка обмена токена:', err);
@@ -190,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showMainScreen();
   });
 
-  // Запрос к API для получения кредитов
+  // Функция для получения информации о кредитах
   function loadUserCredits() {
     const token = storageGet('authToken');
     if (!token) {
@@ -215,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Загрузка проектов с сервера
+  // Функция для загрузки проектов
   function loadProjects() {
     const token = storageGet('authToken');
     if (!token) {
