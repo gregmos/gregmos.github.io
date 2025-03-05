@@ -45,15 +45,22 @@
     }
     .custom-button {
       display: inline-block;
+      box-sizing: border-box;
+      width: 160px;
       padding: 8px 12px;
       margin: 10px 5px 10px 0;
       border-radius: 4px;
       background-color: #4285F4;
       color: #fff;
-      font-size: 1rem;
+      font-size: 14px;
       text-align: center;
       white-space: nowrap;
       text-decoration: none;
+    }
+
+    #uploadFileBtn.custom-button {
+      background-color: #4CAF50 !important;
+      color: #fff;
     }
     .custom-button:hover {
       opacity: 0.9;
