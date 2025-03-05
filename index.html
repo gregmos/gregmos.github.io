@@ -83,6 +83,7 @@
     #creditInfo {
       margin-bottom: 20px; /* <-- добавлен отступ */
     }
+    /* Стили для списка проектов */
     #projectList {
       list-style: none;
       padding: 0;
@@ -94,12 +95,20 @@
       background-color: #fff;
       margin-bottom: 20px;
     }
+
+    /* Используем grid, как в popup.html */
     #projectList li {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto 24px 24px;
       align-items: center;
+      gap: 8px;
       padding: 10px;
       border-bottom: 1px solid #e0e0e0;
+    }
+
+    /* Обеспечиваем, чтобы обёртка для иконок не нарушала сетку */
+    #projectList li div {
+      display: contents;
     }
     #projectList li:last-child {
       border-bottom: none;

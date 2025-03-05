@@ -242,27 +242,33 @@ document.addEventListener('DOMContentLoaded', function() {
             data.projects.forEach((project) => {
               const li = document.createElement('li');
               li.dataset.projectId = project.id;
+
+              // Первый столбец: название проекта и количество файлов
               const nameSpan = document.createElement('span');
               nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
               li.appendChild(nameSpan);
 
-              // Создаем контейнер для иконок и добавляем класс для стилизации
+              // Второй и третий столбцы: иконки.
+              // Обёртка, которая благодаря правилу display: contents из CSS «распаковывается»
               const iconsContainer = document.createElement('div');
-              iconsContainer.classList.add('icons-container'); // <-- добавлено
 
+              // Если есть папка на Google Drive, добавляем иконку
               if (project.folder_id) {
                 const driveLink = document.createElement('a');
                 driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
                 driveLink.target = "_blank";
                 driveLink.title = "Открыть папку в Google Drive";
+
                 const driveIcon = document.createElement('img');
                 driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
                 driveIcon.style.width = "24px";
                 driveIcon.style.height = "24px";
+
                 driveLink.appendChild(driveIcon);
                 iconsContainer.appendChild(driveLink);
               }
 
+              // Добавляем кнопку удаления (корзина)
               const deleteBtn = document.createElement('button');
               deleteBtn.innerHTML = '🗑️';
               deleteBtn.classList.add('icon-button');
@@ -312,6 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
         projectList.innerHTML = 'Ошибка получения данных проектов';
       });
     }
+
 
 
   // Функция склонения слова "файл"
@@ -384,29 +391,42 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-  function updateCeleryProgress(doneCount, total, tasks) {
-    storageSet('pendingTasks', tasks);
-    const percent = Math.round((doneCount / total) * 100);
-    celeryProgressBar.value = percent;
-    celeryProgressText.textContent = `${doneCount}/${total}`;
-    celeryProgressContainer.style.display = 'block';
-    if (doneCount === total) {
-      celeryProgressBar.value = 100;
-      celeryProgressText.textContent = `${total}/${total}`;
-      loadUserCredits();
-      loadProjects();
-      pdfFileInput.disabled = false;
-      uploadFileBtn.disabled = false;
-      pdfFileInput.value = '';
-      alert('Все файлы успешно обработаны!');
-      setTimeout(() => {
-        storageSet('pendingTasks', []);
-        celeryProgressContainer.style.display = 'none';
-        clearInterval(celeryIntervalId);
-        celeryIntervalId = null;
-      }, 1500);
+    function updateCeleryProgress(doneCount, total, tasks) {
+      storageSet('pendingTasks', tasks);
+      const percent = Math.round((doneCount / total) * 100);
+      celeryProgressBar.value = percent;
+      celeryProgressText.textContent = `${doneCount}/${total}`;
+      celeryProgressContainer.style.display = 'block';
+
+      if (doneCount === total) {
+        celeryProgressBar.value = 100;
+        celeryProgressText.textContent = `${total}/${total}`;
+        loadUserCredits();
+        loadProjects();
+
+        // Разблокируем и сбрасываем инпут
+        pdfFileInput.disabled = false;
+        uploadFileBtn.disabled = false;
+        pdfFileInput.value = '';
+
+        // Сбрасываем текст label для выбора файлов
+        const fileLabel = document.querySelector('label[for="pdfFileInput"]');
+        if (fileLabel) {
+          fileLabel.textContent = 'Выбрать файлы';
+        }
+        // Скрываем кнопку "Обработать"
+        uploadFileBtn.style.display = 'none';
+
+        alert('Все файлы успешно обработаны!');
+
+        setTimeout(() => {
+          storageSet('pendingTasks', []);
+          celeryProgressContainer.style.display = 'none';
+          clearInterval(celeryIntervalId);
+          celeryIntervalId = null;
+        }, 1500);
+      }
     }
-  }
   function addPendingTask(taskId) {
     let tasks = storageGet('pendingTasks') || [];
     tasks.push({ taskId: taskId, done: false, added: Date.now() });
