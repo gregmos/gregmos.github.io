@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
               deleteBtn.title = 'Удалить проект';
               deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (confirm("Вы точно хотите удалить проект?")) {
+                if (confirm("Вы точно хотите удалить проект?\nЭто также удалит проект из базы данных на сервере (папка на Google Drive не тронется)")) {
                   const token = storageGet('authToken');
                   fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/delete_project/${project.id}`, {
                     method: 'DELETE',
