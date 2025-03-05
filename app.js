@@ -255,6 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
               // Если есть папка на Google Drive, добавляем иконку
               if (project.folder_id) {
                 const driveLink = document.createElement('a');
+                driveIcon.classList.add('drive-icon');
                 driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
                 driveLink.target = "_blank";
                 driveLink.title = "Открыть папку в Google Drive";
@@ -263,8 +264,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
                 driveIcon.style.width = "24px";
                 driveIcon.style.height = "24px";
-                driveIcon.style.position = "relative";
-                driveIcon.style.top = "2px";
 
                 driveLink.appendChild(driveIcon);
                 iconsContainer.appendChild(driveLink);
