@@ -89,10 +89,15 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // Выход из системы
-  signOutBtn.addEventListener('click', () => {
-    localStorage.removeItem('authToken');
-    showLoginScreen();
-  });
+    const signOutBtn = document.getElementById('signOutBtn');
+    if (signOutBtn) {
+      signOutBtn.addEventListener('click', () => {
+        localStorage.removeItem('authToken');
+        showLoginScreen();
+      });
+    } else {
+      console.error("Элемент signOutBtn не найден");
+    }
 
   // Настройки
   settingsBtn.addEventListener('click', () => {
