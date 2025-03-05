@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>КАД-helper</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Подключаем библиотеку Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* Сброс отступов и базовые стили */
     * {
@@ -153,13 +155,6 @@
       line-height: 1.5;
       margin-bottom: 20px;
     }
-    #loginSection button {
-      padding: 10px 20px;
-      background-color: #4285F4;
-      color: #fff;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
     /* Прогресс-бар и индикаторы */
     progress {
       width: 100%;
@@ -194,7 +189,8 @@
       </div>
       <h1>Инсайт</h1>
       <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
-      <button id="loginBtn">Войти через Google</button>
+      <!-- Контейнер для кнопки входа от Google -->
+      <div id="loginBtnContainer"></div>
     </div>
     <!-- Основной экран -->
     <div id="mainSection">

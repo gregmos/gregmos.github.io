@@ -4,8 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const mainSection = document.getElementById('mainSection');
   const settingsSection = document.getElementById('settingsSection');
 
-  // Кнопки и элементы интерфейса
-  const loginBtn = document.getElementById('loginBtn');
+  // Элементы интерфейса
   const signOutBtn = document.getElementById('signOutBtn');
   const settingsBtn = document.getElementById('settingsBtn');
   const creditInfo = document.getElementById('creditInfo');
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let celeryIntervalId = null;
 
-  // Простая эмуляция хранения данных (вместо chrome.storage)
+  // Функции работы с localStorage
   function storageGet(key) {
     const value = localStorage.getItem(key);
     try {
@@ -38,24 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  // Простейшая имитация аутентификации (в реальном приложении здесь нужно использовать OAuth2)
-  function getAuthToken(interactive = false) {
-    return new Promise((resolve, reject) => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        resolve(token);
-      } else if (interactive) {
-        // Имитация успешного входа
-        const simulatedToken = 'simulated-token';
-        localStorage.setItem('authToken', simulatedToken);
-        resolve(simulatedToken);
-      } else {
-        reject('Нет токена');
-      }
-    });
-  }
-
-  // Переключение экранов
+  // Функции переключения экранов
   function showLoginScreen() {
     loginSection.style.display = 'block';
     mainSection.style.display = 'none';
@@ -72,38 +54,39 @@ document.addEventListener('DOMContentLoaded', function() {
     settingsSection.style.display = 'block';
   }
 
-  // Проверка авторизации
-  function checkAuth() {
-    getAuthToken().then(token => {
+  // Обработка ответа от Google после входа
+  function handleCredentialResponse(response) {
+    // response.credential содержит JWT токен
+    console.log("Получен токен:", response.credential);
+    storageSet('authToken', response.credential);
+    showMainScreen();
+    loadUserCredits();
+    loadProjects();
+    // Можно запускать опрос фоновых задач, если они есть
+    const pendingTasks = storageGet('pendingTasks') || [];
+    if (pendingTasks.length > 0) startCeleryPolling();
+  }
+
+  // Инициализация Google Identity Services
+  window.onload = function () {
+    google.accounts.id.initialize({
+      client_id: "996490842675-mb6q3m8soslr6i5jr52t6p2f1oaur4et.apps.googleusercontent.com", // Замените на свой Client ID
+      callback: handleCredentialResponse
+    });
+    google.accounts.id.renderButton(
+      document.getElementById("loginBtnContainer"),
+      { theme: "outline", size: "large" }  // Параметры кнопки
+    );
+    // Если пользователь уже аутентифицирован, можно автоматически показать главный экран
+    const token = storageGet('authToken');
+    if (token) {
       showMainScreen();
       loadUserCredits();
       loadProjects();
-      const pendingTasks = storageGet('pendingTasks') || [];
-      if (pendingTasks.length > 0) startCeleryPolling();
-    }).catch(() => {
+    } else {
       showLoginScreen();
-    });
-  }
-
-  // Пример функции склонения слова "файл"
-  function pluralFile(count) {
-    if (count % 10 === 1 && count % 100 !== 11) return 'файл';
-    if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'файла';
-    return 'файлов';
-  }
-
-  // Кнопка входа (имитация OAuth)
-  loginBtn.addEventListener('click', () => {
-    getAuthToken(true).then(token => {
-      showMainScreen();
-      loadUserCredits();
-      loadProjects();
-      const pendingTasks = storageGet('pendingTasks') || [];
-      if (pendingTasks.length > 0) startCeleryPolling();
-    }).catch(err => {
-      alert('Ошибка входа: ' + err);
-    });
-  });
+    }
+  };
 
   // Выход из системы
   signOutBtn.addEventListener('click', () => {
@@ -146,126 +129,134 @@ document.addEventListener('DOMContentLoaded', function() {
     showMainScreen();
   });
 
-  // Загрузка кредитов (пример запроса к API)
+  // Пример запроса к API для получения кредитов
   function loadUserCredits() {
-    getAuthToken().then(token => {
-      fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_user_info', {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.credits !== undefined) {
-          creditInfo.innerText = "Осталось кредитов: " + data.credits;
-        } else {
-          creditInfo.innerText = "Ошибка получения данных";
-        }
-      })
-      .catch(err => {
-        console.error(err);
+    const token = storageGet('authToken');
+    if (!token) {
+      creditInfo.innerText = 'Ошибка авторизации';
+      return;
+    }
+    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_user_info', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.credits !== undefined) {
+        creditInfo.innerText = "Осталось кредитов: " + data.credits;
+      } else {
         creditInfo.innerText = "Ошибка получения данных";
-      });
-    }).catch(err => {
-      creditInfo.innerText = "Ошибка авторизации";
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      creditInfo.innerText = "Ошибка получения данных";
     });
   }
 
   // Загрузка проектов с сервера
   function loadProjects() {
-    getAuthToken().then(token => {
-      fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_projects', {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token }
-      })
-      .then(response => response.json())
-      .then(data => {
-        projectList.innerHTML = '';
-        if (data.projects) {
-          if (data.projects.length === 0) {
-            document.getElementById('noProjectsMessage').style.display = 'block';
-          } else {
-            document.getElementById('noProjectsMessage').style.display = 'none';
-            data.projects.forEach((project) => {
-              const li = document.createElement('li');
-              li.dataset.projectId = project.id;
-              const nameSpan = document.createElement('span');
-              nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
-              li.appendChild(nameSpan);
-
-              const iconsContainer = document.createElement('div');
-              if (project.folder_id) {
-                const driveLink = document.createElement('a');
-                driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
-                driveLink.target = "_blank";
-                driveLink.title = "Открыть папку в Google Drive";
-                const driveIcon = document.createElement('img');
-                driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
-                driveIcon.style.width = "24px";
-                driveIcon.style.height = "24px";
-                driveLink.appendChild(driveIcon);
-                iconsContainer.appendChild(driveLink);
-              }
-
-              const deleteBtn = document.createElement('button');
-              deleteBtn.innerHTML = '🗑️';
-              deleteBtn.classList.add('icon-button');
-              deleteBtn.title = 'Удалить проект';
-              deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (confirm("Вы точно хотите удалить проект?")) {
-                  getAuthToken().then(token => {
-                    fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/delete_project/${project.id}`, {
-                      method: 'DELETE',
-                      headers: { 'Authorization': 'Bearer ' + token }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                      if (data.message === 'Project deleted successfully') {
-                        loadProjects();
-                      } else {
-                        alert("Ошибка при удалении проекта");
-                      }
-                    })
-                    .catch(err => {
-                      console.error(err);
-                      alert('Ошибка при удалении проекта: ' + err.message);
-                    });
-                  });
-                }
-              });
-              iconsContainer.appendChild(deleteBtn);
-              li.appendChild(iconsContainer);
-
-              // Выбор проекта
-              const defaultProjectId = storageGet('defaultProjectId');
-              if (defaultProjectId === project.id) {
-                li.classList.add('selected');
-              }
-              li.addEventListener('click', () => {
-                storageSet('defaultProjectId', project.id);
-                loadProjects();
-              });
-              projectList.appendChild(li);
-            });
-          }
+    const token = storageGet('authToken');
+    if (!token) {
+      projectList.innerHTML = 'Ошибка авторизации';
+      return;
+    }
+    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_projects', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(response => response.json())
+    .then(data => {
+      projectList.innerHTML = '';
+      if (data.projects) {
+        if (data.projects.length === 0) {
+          document.getElementById('noProjectsMessage').style.display = 'block';
         } else {
-          projectList.innerHTML = 'Ошибка получения данных проектов';
+          document.getElementById('noProjectsMessage').style.display = 'none';
+          data.projects.forEach((project) => {
+            const li = document.createElement('li');
+            li.dataset.projectId = project.id;
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
+            li.appendChild(nameSpan);
+
+            const iconsContainer = document.createElement('div');
+            if (project.folder_id) {
+              const driveLink = document.createElement('a');
+              driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
+              driveLink.target = "_blank";
+              driveLink.title = "Открыть папку в Google Drive";
+              const driveIcon = document.createElement('img');
+              driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
+              driveIcon.style.width = "24px";
+              driveIcon.style.height = "24px";
+              driveLink.appendChild(driveIcon);
+              iconsContainer.appendChild(driveLink);
+            }
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.classList.add('icon-button');
+            deleteBtn.title = 'Удалить проект';
+            deleteBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (confirm("Вы точно хотите удалить проект?")) {
+                const token = storageGet('authToken');
+                fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/delete_project/${project.id}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.message === 'Project deleted successfully') {
+                    loadProjects();
+                  } else {
+                    alert("Ошибка при удалении проекта");
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  alert('Ошибка при удалении проекта: ' + err.message);
+                });
+              }
+            });
+            iconsContainer.appendChild(deleteBtn);
+            li.appendChild(iconsContainer);
+
+            const defaultProjectId = storageGet('defaultProjectId');
+            if (defaultProjectId === project.id) {
+              li.classList.add('selected');
+            }
+            li.addEventListener('click', () => {
+              storageSet('defaultProjectId', project.id);
+              loadProjects();
+            });
+            projectList.appendChild(li);
+          });
         }
-      })
-      .catch(err => {
-        console.error(err);
+      } else {
         projectList.innerHTML = 'Ошибка получения данных проектов';
-      });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      projectList.innerHTML = 'Ошибка получения данных проектов';
     });
   }
 
-  // Функции для опроса статуса фоновых задач (имитация)
+  // Пример функции склонения слова "файл"
+  function pluralFile(count) {
+    if (count % 10 === 1 && count % 100 !== 11) return 'файл';
+    if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'файла';
+    return 'файлов';
+  }
+
+  // Функции для опроса состояния фоновых задач (имитация)
   function startCeleryPolling() {
     if (celeryIntervalId) return;
     celeryIntervalId = setInterval(pollAllTasks, 5000);
     pollAllTasks();
   }
-
   function pollAllTasks() {
     let tasks = storageGet('pendingTasks') || [];
     const TEN_MINUTES = 10 * 60 * 1000;
@@ -293,38 +284,36 @@ document.addEventListener('DOMContentLoaded', function() {
         requestsDone++;
         if (requestsDone === total) updateCeleryProgress(successCount, total, tasks);
       } else {
-        getAuthToken().then(token => {
-          fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/task_status/${task.taskId}`, {
-            method: 'GET',
-            headers: { 'Authorization': 'Bearer ' + token }
-          })
-          .then(res => res.json())
-          .then(info => {
-            if (info.state === 'SUCCESS' || info.state === 'FAILURE') {
-              task.done = true;
-              if (info.state === 'FAILURE') {
-                task.error = true;
-                failureCount++;
-              } else {
-                successCount++;
-              }
-            }
-            requestsDone++;
-            if (requestsDone === total) updateCeleryProgress(successCount, total, tasks);
-          })
-          .catch(err => {
-            console.error('Ошибка опроса', err);
+        const token = storageGet('authToken');
+        fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/task_status/${task.taskId}`, {
+          method: 'GET',
+          headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(res => res.json())
+        .then(info => {
+          if (info.state === 'SUCCESS' || info.state === 'FAILURE') {
             task.done = true;
-            task.error = true;
-            failureCount++;
-            requestsDone++;
-            if (requestsDone === total) updateCeleryProgress(successCount, total, tasks);
-          });
+            if (info.state === 'FAILURE') {
+              task.error = true;
+              failureCount++;
+            } else {
+              successCount++;
+            }
+          }
+          requestsDone++;
+          if (requestsDone === total) updateCeleryProgress(successCount, total, tasks);
+        })
+        .catch(err => {
+          console.error('Ошибка опроса', err);
+          task.done = true;
+          task.error = true;
+          failureCount++;
+          requestsDone++;
+          if (requestsDone === total) updateCeleryProgress(successCount, total, tasks);
         });
       }
     });
   }
-
   function updateCeleryProgress(doneCount, total, tasks) {
     storageSet('pendingTasks', tasks);
     const percent = Math.round((doneCount / total) * 100);
@@ -348,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 1500);
     }
   }
-
   function addPendingTask(taskId) {
     let tasks = storageGet('pendingTasks') || [];
     tasks.push({ taskId: taskId, done: false, added: Date.now() });
@@ -361,51 +349,47 @@ document.addEventListener('DOMContentLoaded', function() {
     newProjectForm.style.display = 'flex';
     showNewProjectBtn.style.display = 'none';
   });
-
   function resetProjectButtons() {
     confirmNewProjectBtn.disabled = false;
     cancelNewProjectBtn.disabled = false;
     confirmNewProjectBtn.innerHTML = '✔';
   }
-
   confirmNewProjectBtn.addEventListener('click', () => {
     const name = newProjectInput.value.trim();
     if (!name) return alert('Введите название проекта');
     confirmNewProjectBtn.disabled = true;
     cancelNewProjectBtn.disabled = true;
     confirmNewProjectBtn.innerHTML = '<div class="spinner"></div>Создаём...';
-    getAuthToken(true).then(token => {
-      fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/create_project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ name: name })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.project_id) {
-          storageSet('defaultProjectId', data.project_id);
-          loadProjects();
-          loadUserCredits();
-          newProjectForm.style.display = 'none';
-          showNewProjectBtn.style.display = 'block';
-          newProjectInput.value = '';
-          resetProjectButtons();
-        } else {
-          alert('Ошибка создания проекта');
-          resetProjectButtons();
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Ошибка при запросе создания проекта');
+    const token = storageGet('authToken');
+    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/create_project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ name: name })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.project_id) {
+        storageSet('defaultProjectId', data.project_id);
+        loadProjects();
+        loadUserCredits();
+        newProjectForm.style.display = 'none';
+        showNewProjectBtn.style.display = 'block';
+        newProjectInput.value = '';
         resetProjectButtons();
-      });
+      } else {
+        alert('Ошибка создания проекта');
+        resetProjectButtons();
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Ошибка при запросе создания проекта');
+      resetProjectButtons();
     });
   });
-
   cancelNewProjectBtn.addEventListener('click', () => {
     newProjectForm.style.display = 'none';
     showNewProjectBtn.style.display = 'block';
@@ -451,7 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
       "Ссылки на судебную практику"
     ];
     const totalFiles = files.length;
-
     function processNext(index) {
       if (index >= totalFiles) {
         alert("Все файлы поставлены в очередь на обработку.");
@@ -469,40 +452,37 @@ document.addEventListener('DOMContentLoaded', function() {
       const reader = new FileReader();
       reader.onload = function(e) {
         const fileBase64 = e.target.result.split(',')[1];
-        getAuthToken(true).then(token => {
-          fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/add_document', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({
-              project_id: defaultProjectId,
-              file: fileBase64,
-              file_name: file.name,
-              selected_fields: selectedFields
-            })
+        const token = storageGet('authToken');
+        fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/add_document', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            project_id: defaultProjectId,
+            file: fileBase64,
+            file_name: file.name,
+            selected_fields: selectedFields
           })
-          .then(response => response.json())
-          .then(data => {
-            if (data.task_ids && Array.isArray(data.task_ids)) {
-              data.task_ids.forEach(taskId => addPendingTask(taskId));
-            } else if (data.task_id) {
-              addPendingTask(data.task_id);
-            }
-            processNext(index + 1);
-          })
-          .catch(err => {
-            console.error(err);
-            alert('Ошибка при загрузке файла ' + file.name);
-            processNext(index + 1);
-          });
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.task_ids && Array.isArray(data.task_ids)) {
+            data.task_ids.forEach(taskId => addPendingTask(taskId));
+          } else if (data.task_id) {
+            addPendingTask(data.task_id);
+          }
+          processNext(index + 1);
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Ошибка при загрузке файла ' + file.name);
+          processNext(index + 1);
         });
       };
       reader.readAsDataURL(file);
     }
     processNext(0);
   });
-
-  checkAuth();
 });
