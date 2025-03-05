@@ -1,5 +1,3 @@
-// app.js
-
 document.addEventListener('DOMContentLoaded', function() {
   // Элементы секций
   const loginSection = document.getElementById('loginSection');
@@ -122,6 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Ожидаем, что сервер вернёт id_token, access_token и refresh_token
       if (data.id_token) {
         localStorage.setItem('authToken', data.id_token);
+        if (data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh_token);
+        }
         showMainScreen();
         loadUserCredits();
         loadProjects();
@@ -150,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (signOutBtn) {
     signOutBtn.addEventListener('click', () => {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       showLoginScreen();
     });
   } else {
@@ -423,13 +425,14 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelNewProjectBtn.disabled = true;
     confirmNewProjectBtn.innerHTML = '<div class="spinner"></div>Создаём...';
     const token = storageGet('authToken');
+    const refreshToken = localStorage.getItem('refreshToken');
     fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/create_project', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
       },
-      body: JSON.stringify({ name: name })
+      body: JSON.stringify({ name: name, refresh_token: refreshToken })
     })
     .then(response => response.json())
     .then(data => {
