@@ -265,9 +265,9 @@
       </div>
       <h1>Инсайт</h1>
         <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
-        <p>Загрузив PDF-файлы, решения автоматически сохранятся на ваш Google Диск в виде папки с таблицей Google Spreadsheet, где будет отражена подробная информация о каждом судебном решении, включая: анализ резолютивной части, применяемые нормы права, судебная практика и иное.</p>
+        <p>Загрузив файлы с судебными решениями, они автоматически сохранятся на ваш Google Диск в виде папки с таблицей Google Spreadsheet, где будет отражена подробная информация о каждом судебном решении, включая: анализ правовой позиции, применяемые нормы права, судебная практика и иное.</p>
         <p>Вы сможете настроить отображение данных в таблице в разделе «Настройки».</p>
-      <button id="oauthSignInBtn" class="custom-button">Войти через Google (OAuth)</button>
+      <button id="oauthSignInBtn" class="custom-button">Войти через Google</button>
     </div>
 
     <!-- Основной экран -->
@@ -312,7 +312,7 @@
       <!-- Загрузка файлов -->
       <div id="uploadContainer" style="margin-top: 20px;">
         <input type="file" id="pdfFileInput" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display: none;">
-        <label for="pdfFileInput" class="custom-button">Выбрать файлы</label>
+        <label for="pdfFileInput" class="custom-button" title="Поддерживаются Docx и PDF файлы. Один документ должен содержать одно решение">Выбрать решения</label>
         <button id="uploadFileBtn" class="custom-button" style="display: none;">Обработать</button>
       </div>
 
