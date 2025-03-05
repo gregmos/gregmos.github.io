@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>КАД-helper</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Подключаем библиотеку Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Если больше не используете стандартную библиотеку, её можно удалить -->
+  <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
   <style>
     /* Сброс отступов и базовые стили */
     * {
@@ -163,7 +163,7 @@
     #loginBtnContainer {
       display: flex;
       justify-content: center;
-      margin: 20px 0; /* при необходимости для отступов сверху и снизу */
+      margin: 20px 0;
     }
     /* Дополнительные стили для адаптивности */
     @media (max-width: 768px) {
@@ -194,8 +194,8 @@
       </div>
       <h1>Инсайт</h1>
       <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
-      <!-- Контейнер для кнопки входа от Google -->
-      <div id="loginBtnContainer"></div>
+      <!-- Кнопка для запуска OAuth авторизации -->
+      <button id="oauthSignInBtn" class="custom-button">Войти через Google (OAuth)</button>
     </div>
     <!-- Основной экран -->
     <div id="mainSection">

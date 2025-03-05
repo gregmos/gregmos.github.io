@@ -1,3 +1,5 @@
+// app.js
+
 document.addEventListener('DOMContentLoaded', function() {
   // Элементы секций
   const loginSection = document.getElementById('loginSection');
@@ -21,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const celeryProgressContainer = document.getElementById('celeryProgressContainer');
   const celeryProgressBar = document.getElementById('celeryProgressBar');
   const celeryProgressText = document.getElementById('celeryProgressText');
+
+  // Добавляем кнопку для OAuth входа (уже присутствует в index.html)
+  const oauthSignInBtn = document.getElementById('oauthSignInBtn');
 
   let celeryIntervalId = null;
 
@@ -54,38 +59,91 @@ document.addEventListener('DOMContentLoaded', function() {
     settingsSection.style.display = 'block';
   }
 
-  // Обработка ответа от Google после входа
-  function handleCredentialResponse(response) {
-    // response.credential содержит JWT токен
-    console.log("Получен токен:", response.credential);
-    storageSet('authToken', response.credential);
-    showMainScreen();
-    loadUserCredits();
-    loadProjects();
-    const pendingTasks = storageGet('pendingTasks') || [];
-    if (pendingTasks.length > 0) startCeleryPolling();
+  // PKCE: функция генерации случайной строки (code_verifier)
+  function generateRandomString(length) {
+    const array = new Uint8Array(length);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec => ('0' + dec.toString(16)).slice(-2)).join('');
   }
 
-  // Инициализация Google Identity Services
-  window.onload = function () {
-    google.accounts.id.initialize({
-      client_id: "996490842675-mb6q3m8soslr6i5jr52t6p2f1oaur4et.apps.googleusercontent.com", // замените на свой Client ID
-      callback: handleCredentialResponse
+  // PKCE: генерация code_challenge по алгоритму SHA-256 и преобразование в URL-safe base64
+  async function generateCodeChallenge(codeVerifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    const base64Digest = btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    return base64Digest;
+  }
+
+  // OAuth: обработка входа по нажатию кнопки
+  if (oauthSignInBtn) {
+    oauthSignInBtn.addEventListener('click', async () => {
+      // Генерируем PKCE-параметры
+      const codeVerifier = generateRandomString(64);
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      // Сохраняем codeVerifier для последующего обмена на токены
+      localStorage.setItem('codeVerifier', codeVerifier);
+
+      // Задайте свой redirect_uri (он должен быть зарегистрирован в Google Console)
+      const redirectUri = 'https://gregmos.github.io/';
+
+      const params = new URLSearchParams({
+        client_id: '996490842675-mb6q3m8soslr6i5jr52t6p2f1oaur4et.apps.googleusercontent.com',
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets',
+        access_type: 'offline',
+        prompt: 'consent',
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256'
+      });
+
+      // Перенаправляем пользователя на страницу авторизации Google
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
     });
-    google.accounts.id.renderButton(
-      document.getElementById("loginBtnContainer"),
-      { theme: "outline", size: "large" }
-    );
-    // Если токен уже сохранён, сразу показываем главный экран
-    const token = storageGet('authToken');
-    if (token) {
+  }
+
+  // Если пользователь вернулся с параметром code (редирект после авторизации)
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  if (code) {
+    const codeVerifier = localStorage.getItem('codeVerifier');
+    // Обменяем код на токены через серверный эндпоинт
+    fetch(' ', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, code_verifier: codeVerifier })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Ожидаем, что сервер вернёт id_token, access_token и refresh_token.
+      // Сохраняем id_token для последующих API вызовов.
+      localStorage.setItem('authToken', data.id_token);
+      // Можно при желании сохранить и refresh_token (но лучше использовать его на сервере)
+      // Переходим к основному экрану
       showMainScreen();
       loadUserCredits();
       loadProjects();
-    } else {
-      showLoginScreen();
-    }
-  };
+      // Очистка параметра кода из URL
+      window.history.replaceState({}, document.title, "/");
+    })
+    .catch(err => {
+      console.error('Ошибка обмена токена:', err);
+    });
+  }
+
+  // Если токен уже сохранён, сразу показываем основной экран
+  const token = storageGet('authToken');
+  if (token) {
+    showMainScreen();
+    loadUserCredits();
+    loadProjects();
+  } else {
+    showLoginScreen();
+  }
 
   // Выход из системы
   if (signOutBtn) {
@@ -254,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return 'файлов';
   }
 
-  // Функции опроса состояния фоновых задач (имитация)
+  // Функции опроса состояния фоновых задач
   function startCeleryPolling() {
     if (celeryIntervalId) return;
     celeryIntervalId = setInterval(pollAllTasks, 5000);
