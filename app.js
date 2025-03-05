@@ -62,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
     showMainScreen();
     loadUserCredits();
     loadProjects();
-    // Можно запускать опрос фоновых задач, если они есть
     const pendingTasks = storageGet('pendingTasks') || [];
     if (pendingTasks.length > 0) startCeleryPolling();
   }
@@ -70,14 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Инициализация Google Identity Services
   window.onload = function () {
     google.accounts.id.initialize({
-      client_id: "996490842675-mb6q3m8soslr6i5jr52t6p2f1oaur4et.apps.googleusercontent.com", // Замените на свой Client ID
+      client_id: "996490842675-mb6q3m8soslr6i5jr52t6p2f1oaur4et.apps.googleusercontent.com", // замените на свой Client ID
       callback: handleCredentialResponse
     });
     google.accounts.id.renderButton(
       document.getElementById("loginBtnContainer"),
-      { theme: "outline", size: "large" }  // Параметры кнопки
+      { theme: "outline", size: "large" }
     );
-    // Если пользователь уже аутентифицирован, можно автоматически показать главный экран
+    // Если токен уже сохранён, сразу показываем главный экран
     const token = storageGet('authToken');
     if (token) {
       showMainScreen();
@@ -89,15 +88,14 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // Выход из системы
-    const signOutBtn = document.getElementById('signOutBtn');
-    if (signOutBtn) {
-      signOutBtn.addEventListener('click', () => {
-        localStorage.removeItem('authToken');
-        showLoginScreen();
-      });
-    } else {
-      console.error("Элемент signOutBtn не найден");
-    }
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', () => {
+      localStorage.removeItem('authToken');
+      showLoginScreen();
+    });
+  } else {
+    console.error("Элемент signOutBtn не найден");
+  }
 
   // Настройки
   settingsBtn.addEventListener('click', () => {
@@ -134,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showMainScreen();
   });
 
-  // Пример запроса к API для получения кредитов
+  // Запрос к API для получения кредитов
   function loadUserCredits() {
     const token = storageGet('authToken');
     if (!token) {
@@ -249,14 +247,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Пример функции склонения слова "файл"
+  // Функция склонения слова "файл"
   function pluralFile(count) {
     if (count % 10 === 1 && count % 100 !== 11) return 'файл';
     if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'файла';
     return 'файлов';
   }
 
-  // Функции для опроса состояния фоновых задач (имитация)
+  // Функции опроса состояния фоновых задач (имитация)
   function startCeleryPolling() {
     if (celeryIntervalId) return;
     celeryIntervalId = setInterval(pollAllTasks, 5000);
