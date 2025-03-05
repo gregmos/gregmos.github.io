@@ -2,31 +2,40 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>КАД-helper</title>
+  <title>Инсайт: Судебные решения</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
+    /* Сброс отступов и базовые стили */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
-      margin: 20px;
-      padding: 0;
       background-color: #fafafa;
-      width: 600px;
-      position: relative;
+      padding: 20px;
+    }
+    /* Контейнер для всего контента */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     h1 {
-      font-size: 24px;
+      font-size: 2rem;
       margin-bottom: 10px;
       color: #333;
     }
-    /* Скрываем секции, будем переключать через JS */
+    /* Секции переключения экрана */
     #loginSection, #mainSection, #settingsSection {
       display: none;
-      padding: 20px;
     }
+    /* Кнопки */
     button {
       background: none;
-      color: inherit;
-      margin: 0;
-      padding: 0;
       border: none;
       cursor: pointer;
       font: inherit;
@@ -36,122 +45,98 @@
     }
     .icon-button {
       background-color: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
+      font-size: 1.125rem;
     }
     .custom-button {
       display: inline-block;
-      box-sizing: border-box;
-      width: 160px;
       padding: 8px 12px;
-      margin-right: 10px;
-      margin-bottom: 2px;
+      margin: 10px 5px 10px 0;
       border-radius: 4px;
       background-color: #4285F4;
       color: #fff;
-      font-size: 14px;
+      font-size: 1rem;
       text-align: center;
       white-space: nowrap;
+      text-decoration: none;
     }
     .custom-button:hover {
       opacity: 0.9;
     }
+    /* Адаптивная сетка для заголовков и кнопок */
     .header-container {
-      display: grid;
-      grid-template-columns: 1fr 24px 24px;
-      gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
       align-items: center;
-      padding-right: 10px;
+      margin-bottom: 20px;
     }
     .header-actions {
-      display: contents;
+      display: flex;
+      gap: 10px;
     }
-    .header-actions button {
-      position: relative;
-      top: 5px;
-    }
-    #signOutBtn svg, #settingsBtn svg {
-      width: 24px;
-      height: 24px;
-    }
+    /* Стили для списка проектов */
     #projectList {
       list-style: none;
       padding: 0;
-      font-size: 14px;
-      max-height: 200px;
+      font-size: 1rem;
+      max-height: 400px;
       overflow-y: auto;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       background-color: #fff;
+      margin-bottom: 20px;
     }
     #projectList li {
-      display: grid;
-      grid-template-columns: auto 24px 24px;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
+      padding: 10px;
       border-bottom: 1px solid #e0e0e0;
+    }
+    #projectList li:last-child {
+      border-bottom: none;
     }
     #projectList li.selected {
       background-color: #e3f2fd;
     }
+    /* Форма создания проекта */
     #newProjectContainer {
       margin-top: 10px;
     }
     #newProjectForm {
-      width: 100%;
       display: flex;
       align-items: center;
+      margin-top: 10px;
     }
     #newProjectInput {
       flex: 1;
-      padding: 8px;
+      padding: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 1rem;
       margin-right: 10px;
     }
     #confirmNewProjectBtn,
     #cancelNewProjectBtn {
-      color: #4285F4;
-      background-color: transparent;
+      padding: 6px 10px;
+      font-size: 1rem;
       border: 1px solid #4285F4;
       border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 16px;
+      background-color: transparent;
+      color: #4285F4;
     }
-    #confirmNewProjectBtn {
-      margin-right: 5px;
-    }
-    #uploadFileBtn.custom-button {
-      background-color: #4CAF50 !important;
-      color: #fff;
-    }
-    #settingsSection h1 {
-      margin-bottom: 10px;
-    }
-    #settingsSection p {
-      margin-bottom: 20px;
-    }
-    .checkbox-container {
-      margin-bottom: 10px;
-    }
+    /* Стили для экрана логина */
     #loginSection {
-      display: block;
       text-align: center;
       padding: 40px 20px;
     }
-    .logo-container {
-      margin-bottom: 20px;
-    }
     #loginSection h1 {
-      font-size: 28px;
+      font-size: 2rem;
       margin-bottom: 10px;
       color: #333;
     }
     #loginSection p {
-      font-size: 14px;
+      font-size: 1rem;
       color: #555;
       line-height: 1.5;
       margin-bottom: 20px;
@@ -161,150 +146,147 @@
       background-color: #4285F4;
       color: #fff;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 1rem;
     }
-    #loginSection button:hover {
-      opacity: 0.9;
+    /* Прогресс-бар и индикаторы */
+    progress {
+      width: 100%;
+      height: 20px;
     }
-    .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #4285F4;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* Дополнительные стили для адаптивности */
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-actions {
+        margin-top: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Экран логина -->
-  <div id="loginSection">
-    <div class="logo-container">
-      <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
-        <rect width="80" height="80" rx="10" fill="#4285F4"/>
-        <line x1="40" y1="20" x2="40" y2="45" stroke="white" stroke-width="3"/>
-        <line x1="20" y1="35" x2="60" y2="35" stroke="white" stroke-width="3"/>
-        <line x1="20" y1="35" x2="28" y2="45" stroke="white" stroke-width="3"/>
-        <line x1="60" y1="35" x2="52" y2="45" stroke="white" stroke-width="3"/>
-        <circle cx="28" cy="45" r="3" fill="white"/>
-        <circle cx="52" cy="45" r="3" fill="white"/>
-      </svg>
+  <div class="container">
+    <!-- Экран логина -->
+    <div id="loginSection">
+      <div class="logo-container">
+        <svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="10" fill="#4285F4"/>
+          <line x1="40" y1="20" x2="40" y2="45" stroke="white" stroke-width="3"/>
+          <line x1="20" y1="35" x2="60" y2="35" stroke="white" stroke-width="3"/>
+          <line x1="20" y1="35" x2="28" y2="45" stroke="white" stroke-width="3"/>
+          <line x1="60" y1="35" x2="52" y2="45" stroke="white" stroke-width="3"/>
+          <circle cx="28" cy="45" r="3" fill="white"/>
+          <circle cx="52" cy="45" r="3" fill="white"/>
+        </svg>
+      </div>
+      <h1>Инсайт</h1>
+      <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
+      <button id="loginBtn">Войти через Google</button>
     </div>
-    <h1>Инсайт</h1>
-    <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
-    <p>Загрузив PDF-файлы, решения будут сохраняться на сервере, а данные отображаться в таблице.</p>
-    <button id="loginBtn">Войти через Google</button>
+    <!-- Основной экран -->
+    <div id="mainSection">
+      <div class="header-container">
+        <h1>Мои проекты</h1>
+        <div class="header-actions">
+          <button id="settingsBtn" title="Настройки">
+            <svg viewBox="0 0 24 24">
+              <path d="M19.14,12.94a7.07,7.07,0,0,0,.05-.94,7.07,7.07,0,0,0-.05-.94l2.11-1.65a.5.5,0,0,0,.12-.61l-2-3.46a.5.5,0,0,0-.6-.22l-2.49,1a7.14,7.14,0,0,0-1.63-.94L14.5,2.81a.5.5,0,0,0-.5-.31H10a.5.5,0,0,0-.5.31L8.93,5.16a7.14,7.14,0,0,0-1.63.94l-2.49-1a.5.5,0,0,0-.6.22l-2,3.46a.5.5,0,0,0,.12.61L4.86,11.06a7.07,7.07,0,0,0-.05.94,7.07,7.07,0,0,0,.05.94L2.75,14.59a.5.5,0,0,0-.12.61l2,3.46a.5.5,0,0,0,.6.22l2.49-1a7.14,7.14,0,0,0,1.63.94l.57,2.35a.5.5,0,0,0,.5.31h4a.5.5,0,0,0,.5-.31l.57-2.35a7.14,7.14,0,0,0,1.63-.94l2.49,1a.5.5,0,0,0,.6-.22l2-3.46a.5.5,0,0,0-.12-.61ZM12,15.5A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
+            </svg>
+          </button>
+          <button id="signOutBtn" class="icon-button" title="Выйти">
+            <svg viewBox="0 0 24 24" fill="#d32f2f">
+              <path d="M10 9v6h5v4l5-5-5-5v4h-5zM3 3h9v2H5v14h7v2H3V3z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="creditInfo">Загрузка кредитов...</div>
+      <div id="noProjectsMessage" style="display: none; margin-top: 10px;">
+        <p>Добавьте проект, чтобы начать работу с вашей подборкой судебных решений.</p>
+        <p>При добавлении проекта автоматически создаётся соответствующая папка и таблица с данными.</p>
+      </div>
+      <ul id="projectList"></ul>
+      <div id="newProjectContainer">
+        <button id="showNewProjectBtn" class="custom-button">Добавить проект</button>
+        <div id="newProjectForm" style="display: none;">
+          <input type="text" id="newProjectInput" placeholder="Например: Решения по патентным спорам">
+          <button id="confirmNewProjectBtn" class="icon-button" title="Подтвердить">✔</button>
+          <button id="cancelNewProjectBtn" class="icon-button" title="Отмена">✖</button>
+        </div>
+      </div>
+      <!-- Загрузка файлов -->
+      <div id="uploadContainer" style="margin-top: 20px;">
+        <input type="file" id="pdfFileInput" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display: none;">
+        <label for="pdfFileInput" class="custom-button">Выбрать файлы</label>
+        <button id="uploadFileBtn" class="custom-button" style="display: none;">Обработать</button>
+      </div>
+      <!-- Прогресс загрузки -->
+      <div id="progressContainer" style="display: none; margin-top: 10px;">
+        <progress id="uploadProgress" value="0" max="100"></progress>
+        <span id="progressText" style="font-size: 1rem; margin-left: 5px;"></span>
+      </div>
+      <!-- Прогресс фоновой обработки -->
+      <div id="celeryProgressContainer" style="display: none; margin-top: 10px;">
+        <div>Обработка файлов: <span id="celeryProgressText">0/0</span></div>
+        <progress id="celeryProgressBar" value="0" max="100"></progress>
+      </div>
+    </div>
+    <!-- Экран настроек -->
+    <div id="settingsSection">
+      <h1>Настройки обработки</h1>
+      <p>Здесь можно настроить параметры обработки судебных решений.</p>
+      <!-- Пример: можно добавить здесь сетку из чекбоксов -->
+      <div class="checkbox-columns">
+        <div class="checkbox-column">
+          <div class="checkbox-container">
+            <input type="checkbox" id="field1" value="Название суда" checked>
+            <label for="field1">Название суда</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field2" value="Номер дела" checked>
+            <label for="field2">Номер дела</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field3" value="Дата решения" checked>
+            <label for="field3">Дата решения</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field4" value="Истец" checked>
+            <label for="field4">Истец</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field5" value="Ответчик" checked>
+            <label for="field5">Ответчик</label>
+          </div>
+        </div>
+        <div class="checkbox-column">
+          <div class="checkbox-container">
+            <input type="checkbox" id="field6" value="Фабула дела" checked>
+            <label for="field6">Фабула дела</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field7" value="Правовое обоснование принятия решения" checked>
+            <label for="field7">Правовое обоснование принятия решения</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field8" value="Краткие выводы резолютивной части" checked>
+            <label for="field8">Краткие выводы резолютивной части</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field9" value="Ссылки на нормы права" checked>
+            <label for="field9">Ссылки на нормы права</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="field10" value="Ссылки на судебную практику" checked>
+            <label for="field10">Ссылки на судебную практику</label>
+          </div>
+        </div>
+      </div>
+      <button id="saveSettingsBtn" class="custom-button">Принять изменения</button>
+      <button id="cancelSettingsBtn" class="custom-button">Отмена</button>
+    </div>
   </div>
-  <!-- Основной экран -->
-  <div id="mainSection">
-    <div class="header-container">
-      <h1>Мои проекты</h1>
-      <div class="header-actions">
-        <button id="settingsBtn" title="Настройки">
-          <svg viewBox="0 0 24 24">
-            <path d="M19.14,12.94a7.07,7.07,0,0,0,.05-.94,7.07,7.07,0,0,0-.05-.94l2.11-1.65a.5.5,0,0,0,.12-.61l-2-3.46a.5.5,0,0,0-.6-.22l-2.49,1a7.14,7.14,0,0,0-1.63-.94L14.5,2.81a.5.5,0,0,0-.5-.31H10a.5.5,0,0,0-.5.31L8.93,5.16a7.14,7.14,0,0,0-1.63.94l-2.49-1a.5.5,0,0,0-.6.22l-2,3.46a.5.5,0,0,0,.12.61L4.86,11.06a7.07,7.07,0,0,0-.05.94,7.07,7.07,0,0,0,.05.94L2.75,14.59a.5.5,0,0,0-.12.61l2,3.46a.5.5,0,0,0,.6.22l2.49-1a7.14,7.14,0,0,0,1.63.94l.57,2.35a.5.5,0,0,0,.5.31h4a.5.5,0,0,0,.5-.31l.57-2.35a7.14,7.14,0,0,0,1.63-.94l2.49,1a.5.5,0,0,0,.6-.22l2-3.46a.5.5,0,0,0-.12-.61ZM12,15.5A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
-          </svg>
-        </button>
-        <button id="signOutBtn" class="icon-button" title="Выйти">
-          <svg viewBox="0 0 24 24" fill="#d32f2f">
-            <path d="M10 9v6h5v4l5-5-5-5v4h-5zM3 3h9v2H5v14h7v2H3V3z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-    <div id="creditInfo">Загрузка кредитов...</div>
-    <div id="noProjectsMessage" style="display: none; margin-top: 10px;">
-      <p>Добавьте проект, чтобы начать работу с вашей подборкой судебных решений.</p>
-      <p>При добавлении проекта автоматически создаётся соответствующая папка и таблица с данными.</p>
-    </div>
-    <ul id="projectList"></ul>
-    <div id="newProjectContainer">
-      <button id="showNewProjectBtn" class="custom-button">Добавить проект</button>
-      <div id="newProjectForm" style="display: none;">
-        <input type="text" id="newProjectInput" placeholder="Например: Решения по патентным спорам">
-        <button id="confirmNewProjectBtn" class="icon-button" title="Подтвердить">✔</button>
-        <button id="cancelNewProjectBtn" class="icon-button" title="Отмена">✖</button>
-      </div>
-    </div>
-    <!-- Загрузка PDF/Word файлов -->
-    <div id="uploadContainer" style="margin-top: 20px;">
-      <input type="file" id="pdfFileInput" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display: none;">
-      <label for="pdfFileInput" class="custom-button">Выбрать файлы</label>
-      <button id="uploadFileBtn" class="custom-button" style="display: none;">Обработать</button>
-    </div>
-    <!-- Прогресс загрузки файлов -->
-    <div id="progressContainer" style="display: none; margin-top: 10px;">
-      <progress id="uploadProgress" value="0" max="100" style="width: 100%;"></progress>
-      <span id="progressText" style="font-size: 14px; margin-left: 5px;"></span>
-    </div>
-    <!-- Прогресс фоновой обработки -->
-    <div id="celeryProgressContainer" style="display: none; margin-top: 10px;">
-      <div>Обработка файлов: <span id="celeryProgressText">0/0</span></div>
-      <progress id="celeryProgressBar" value="0" max="100" style="width: 100%;"></progress>
-    </div>
-  </div>
-
-  <!-- Экран настроек -->
-  <div id="settingsSection">
-    <h1>Настройки обработки</h1>
-    <p>Здесь можно настроить параметры обработки судебных решений.</p>
-    <div class="checkbox-columns">
-      <div class="checkbox-column">
-        <div class="checkbox-container">
-          <input type="checkbox" id="field1" value="Название суда" checked>
-          <label for="field1">Название суда</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field2" value="Номер дела" checked>
-          <label for="field2">Номер дела</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field3" value="Дата решения" checked>
-          <label for="field3">Дата решения</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field4" value="Истец" checked>
-          <label for="field4">Истец</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field5" value="Ответчик" checked>
-          <label for="field5">Ответчик</label>
-        </div>
-      </div>
-      <div class="checkbox-column">
-        <div class="checkbox-container">
-          <input type="checkbox" id="field6" value="Фабула дела" checked>
-          <label for="field6">Фабула дела</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field7" value="Правовое обоснование принятия решения" checked>
-          <label for="field7">Правовое обоснование принятия решения</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field8" value="Краткие выводы резолютивной части" checked>
-          <label for="field8">Краткие выводы резолютивной части</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field9" value="Ссылки на нормы права" checked>
-          <label for="field9">Ссылки на нормы права</label>
-        </div>
-        <div class="checkbox-container">
-          <input type="checkbox" id="field10" value="Ссылки на судебную практику" checked>
-          <label for="field10">Ссылки на судебную практику</label>
-        </div>
-      </div>
-    </div>
-    <button id="saveSettingsBtn" class="custom-button">Принять изменения</button>
-    <button id="cancelSettingsBtn" class="custom-button">Отмена</button>
-  </div>
-
   <script src="app.js"></script>
 </body>
 </html>
