@@ -234,25 +234,33 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(response => response.json())
       .then(data => {
         projectList.innerHTML = '';
+
+        // Получаем ссылку на контейнер загрузки файлов
+        const uploadContainer = document.getElementById('uploadContainer');
+
         if (data.projects) {
           if (data.projects.length === 0) {
+            // Нет проектов
             document.getElementById('noProjectsMessage').style.display = 'block';
+            // Скрываем блок загрузки
+            uploadContainer.style.display = 'none';
           } else {
+            // Есть проекты
             document.getElementById('noProjectsMessage').style.display = 'none';
+            // Показываем блок загрузки
+            uploadContainer.style.display = 'block';
+
             data.projects.forEach((project) => {
               const li = document.createElement('li');
               li.dataset.projectId = project.id;
 
-              // Первый столбец: название проекта и количество файлов
+              // Название проекта и кол-во файлов
               const nameSpan = document.createElement('span');
               nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
               li.appendChild(nameSpan);
 
-              // Второй и третий столбцы: иконки.
-              // Обёртка, которая благодаря правилу display: contents из CSS «распаковывается»
+              // Иконки Google Drive + корзина
               const iconsContainer = document.createElement('div');
-
-              // Если есть папка на Google Drive, добавляем иконку
               if (project.folder_id) {
                 const driveLink = document.createElement('a');
                 driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
@@ -269,7 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 iconsContainer.appendChild(driveLink);
               }
 
-              // Добавляем кнопку удаления (корзина)
               const deleteBtn = document.createElement('button');
               deleteBtn.innerHTML = '🗑️';
               deleteBtn.classList.add('icon-button');
