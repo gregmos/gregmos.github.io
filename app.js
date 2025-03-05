@@ -263,6 +263,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
                 driveIcon.style.width = "24px";
                 driveIcon.style.height = "24px";
+                driveIcon.style.position = "relative";
+                driveIcon.style.top = "2px";
 
                 driveLink.appendChild(driveIcon);
                 iconsContainer.appendChild(driveLink);
