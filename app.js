@@ -530,7 +530,8 @@ document.addEventListener('DOMContentLoaded', function() {
             project_id: defaultProjectId,
             file: fileBase64,
             file_name: file.name,
-            selected_fields: selectedFields
+            selected_fields: selectedFields,
+            refresh_token: localStorage.getItem('refreshToken')
           })
         })
         .then(response => response.json())
