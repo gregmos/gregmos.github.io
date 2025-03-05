@@ -4,10 +4,7 @@
   <meta charset="UTF-8">
   <title>КАД-helper</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Если больше не используете стандартную библиотеку, её можно удалить -->
-  <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
   <style>
-    /* Сброс отступов и базовые стили */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -18,7 +15,6 @@
       background-color: #fafafa;
       padding: 20px;
     }
-    /* Контейнер для всего контента */
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -31,11 +27,9 @@
       margin-bottom: 10px;
       color: #333;
     }
-    /* Секции переключения экрана */
     #loginSection, #mainSection, #settingsSection {
       display: none;
     }
-    /* Кнопки */
     button {
       background: none;
       border: none;
@@ -64,7 +58,6 @@
     .custom-button:hover {
       opacity: 0.9;
     }
-    /* Стили для иконок настроек и выхода */
     #settingsBtn svg,
     #signOutBtn svg {
       width: 24px;
@@ -76,7 +69,6 @@
     #signOutBtn svg {
       fill: #d32f2f;
     }
-    /* Адаптивная сетка для заголовков и кнопок */
     .header-container {
       display: flex;
       flex-wrap: wrap;
@@ -88,7 +80,9 @@
       display: flex;
       gap: 10px;
     }
-    /* Стили для списка проектов */
+    #creditInfo {
+      margin-bottom: 20px; /* <-- добавлен отступ */
+    }
     #projectList {
       list-style: none;
       padding: 0;
@@ -113,7 +107,12 @@
     #projectList li.selected {
       background-color: #e3f2fd;
     }
-    /* Форма создания проекта */
+    /* <-- Добавляем класс для контейнера иконок (Drive + корзина) */
+    .icons-container {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* небольшое расстояние между иконками */
+    }
     #newProjectContainer {
       margin-top: 10px;
     }
@@ -139,7 +138,6 @@
       background-color: transparent;
       color: #4285F4;
     }
-    /* Стили для экрана логина */
     #loginSection {
       text-align: center;
       padding: 40px 20px;
@@ -155,7 +153,6 @@
       line-height: 1.5;
       margin-bottom: 20px;
     }
-    /* Прогресс-бар и индикаторы */
     progress {
       width: 100%;
       height: 20px;
@@ -165,7 +162,6 @@
       justify-content: center;
       margin: 20px 0;
     }
-    /* Дополнительные стили для адаптивности */
     @media (max-width: 768px) {
       .header-container {
         flex-direction: column;
@@ -174,6 +170,21 @@
       .header-actions {
         margin-top: 10px;
       }
+    }
+    /* <-- Добавляем стили для футера */
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 10px 0;
+      color: #555;
+    }
+    footer a {
+      color: #4285F4;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -194,9 +205,9 @@
       </div>
       <h1>Инсайт</h1>
       <p>Эта программа помогает структурировать и проанализировать вашу подборку судебных решений.</p>
-      <!-- Кнопка для запуска OAuth авторизации -->
       <button id="oauthSignInBtn" class="custom-button">Войти через Google (OAuth)</button>
     </div>
+
     <!-- Основной экран -->
     <div id="mainSection">
       <div class="header-container">
@@ -215,12 +226,17 @@
           </button>
         </div>
       </div>
+
+      <!-- Информация о кредитах с отступом -->
       <div id="creditInfo">Загрузка кредитов...</div>
+
       <div id="noProjectsMessage" style="display: none; margin-top: 10px;">
         <p>Добавьте проект, чтобы начать работу с вашей подборкой судебных решений.</p>
         <p>При добавлении проекта автоматически создаётся соответствующая папка и таблица с данными.</p>
       </div>
+
       <ul id="projectList"></ul>
+
       <div id="newProjectContainer">
         <button id="showNewProjectBtn" class="custom-button">Добавить проект</button>
         <div id="newProjectForm" style="display: none;">
@@ -229,23 +245,27 @@
           <button id="cancelNewProjectBtn" class="icon-button" title="Отмена">✖</button>
         </div>
       </div>
+
       <!-- Загрузка файлов -->
       <div id="uploadContainer" style="margin-top: 20px;">
         <input type="file" id="pdfFileInput" accept="application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple style="display: none;">
         <label for="pdfFileInput" class="custom-button">Выбрать файлы</label>
         <button id="uploadFileBtn" class="custom-button" style="display: none;">Обработать</button>
       </div>
+
       <!-- Прогресс загрузки -->
       <div id="progressContainer" style="display: none; margin-top: 10px;">
         <progress id="uploadProgress" value="0" max="100"></progress>
         <span id="progressText" style="font-size: 1rem; margin-left: 5px;"></span>
       </div>
+
       <!-- Прогресс фоновой обработки -->
       <div id="celeryProgressContainer" style="display: none; margin-top: 10px;">
         <div>Обработка файлов: <span id="celeryProgressText">0/0</span></div>
         <progress id="celeryProgressBar" value="0" max="100"></progress>
       </div>
     </div>
+
     <!-- Экран настроек -->
     <div id="settingsSection">
       <h1>Настройки обработки</h1>
@@ -300,6 +320,13 @@
       <button id="cancelSettingsBtn" class="custom-button">Отмена</button>
     </div>
   </div>
+
+  <!-- Футер по центру (Политика и Условия) -->
+  <footer>
+    <a href="#">Политика конфиденциальности</a>
+    <a href="#">Условия использования</a>
+  </footer>
+
   <script src="app.js"></script>
 </body>
 </html>

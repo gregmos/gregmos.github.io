@@ -221,94 +221,98 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Функция для загрузки проектов
-  function loadProjects() {
-    const token = storageGet('authToken');
-    if (!token) {
-      projectList.innerHTML = 'Ошибка авторизации';
-      return;
-    }
-    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_projects', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(response => response.json())
-    .then(data => {
-      projectList.innerHTML = '';
-      if (data.projects) {
-        if (data.projects.length === 0) {
-          document.getElementById('noProjectsMessage').style.display = 'block';
-        } else {
-          document.getElementById('noProjectsMessage').style.display = 'none';
-          data.projects.forEach((project) => {
-            const li = document.createElement('li');
-            li.dataset.projectId = project.id;
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
-            li.appendChild(nameSpan);
-
-            const iconsContainer = document.createElement('div');
-            if (project.folder_id) {
-              const driveLink = document.createElement('a');
-              driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
-              driveLink.target = "_blank";
-              driveLink.title = "Открыть папку в Google Drive";
-              const driveIcon = document.createElement('img');
-              driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
-              driveIcon.style.width = "24px";
-              driveIcon.style.height = "24px";
-              driveLink.appendChild(driveIcon);
-              iconsContainer.appendChild(driveLink);
-            }
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = '🗑️';
-            deleteBtn.classList.add('icon-button');
-            deleteBtn.title = 'Удалить проект';
-            deleteBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              if (confirm("Вы точно хотите удалить проект?")) {
-                const token = storageGet('authToken');
-                fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/delete_project/${project.id}`, {
-                  method: 'DELETE',
-                  headers: { 'Authorization': 'Bearer ' + token }
-                })
-                .then(response => response.json())
-                .then(data => {
-                  if (data.message === 'Project deleted successfully') {
-                    loadProjects();
-                  } else {
-                    alert("Ошибка при удалении проекта");
-                  }
-                })
-                .catch(err => {
-                  console.error(err);
-                  alert('Ошибка при удалении проекта: ' + err.message);
-                });
-              }
-            });
-            iconsContainer.appendChild(deleteBtn);
-            li.appendChild(iconsContainer);
-
-            const defaultProjectId = storageGet('defaultProjectId');
-            if (defaultProjectId === project.id) {
-              li.classList.add('selected');
-            }
-            li.addEventListener('click', () => {
-              storageSet('defaultProjectId', project.id);
-              loadProjects();
-            });
-            projectList.appendChild(li);
-          });
-        }
-      } else {
-        projectList.innerHTML = 'Ошибка получения данных проектов';
+    function loadProjects() {
+      const token = storageGet('authToken');
+      if (!token) {
+        projectList.innerHTML = 'Ошибка авторизации';
+        return;
       }
-    })
-    .catch(err => {
-      console.error(err);
-      projectList.innerHTML = 'Ошибка получения данных проектов';
-    });
-  }
+      fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_projects', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(response => response.json())
+      .then(data => {
+        projectList.innerHTML = '';
+        if (data.projects) {
+          if (data.projects.length === 0) {
+            document.getElementById('noProjectsMessage').style.display = 'block';
+          } else {
+            document.getElementById('noProjectsMessage').style.display = 'none';
+            data.projects.forEach((project) => {
+              const li = document.createElement('li');
+              li.dataset.projectId = project.id;
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = `${project.name} (${project.processed} ${pluralFile(project.processed)})`;
+              li.appendChild(nameSpan);
+
+              // Создаем контейнер для иконок и добавляем класс для стилизации
+              const iconsContainer = document.createElement('div');
+              iconsContainer.classList.add('icons-container'); // <-- добавлено
+
+              if (project.folder_id) {
+                const driveLink = document.createElement('a');
+                driveLink.href = "https://drive.google.com/drive/folders/" + project.folder_id;
+                driveLink.target = "_blank";
+                driveLink.title = "Открыть папку в Google Drive";
+                const driveIcon = document.createElement('img');
+                driveIcon.src = "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png";
+                driveIcon.style.width = "24px";
+                driveIcon.style.height = "24px";
+                driveLink.appendChild(driveIcon);
+                iconsContainer.appendChild(driveLink);
+              }
+
+              const deleteBtn = document.createElement('button');
+              deleteBtn.innerHTML = '🗑️';
+              deleteBtn.classList.add('icon-button');
+              deleteBtn.title = 'Удалить проект';
+              deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm("Вы точно хотите удалить проект?")) {
+                  const token = storageGet('authToken');
+                  fetch(`https://cases-kad-30bc963f9461.herokuapp.com/api/delete_project/${project.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.message === 'Project deleted successfully') {
+                      loadProjects();
+                    } else {
+                      alert("Ошибка при удалении проекта");
+                    }
+                  })
+                  .catch(err => {
+                    console.error(err);
+                    alert('Ошибка при удалении проекта: ' + err.message);
+                  });
+                }
+              });
+              iconsContainer.appendChild(deleteBtn);
+              li.appendChild(iconsContainer);
+
+              const defaultProjectId = storageGet('defaultProjectId');
+              if (defaultProjectId === project.id) {
+                li.classList.add('selected');
+              }
+              li.addEventListener('click', () => {
+                storageSet('defaultProjectId', project.id);
+                loadProjects();
+              });
+              projectList.appendChild(li);
+            });
+          }
+        } else {
+          projectList.innerHTML = 'Ошибка получения данных проектов';
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        projectList.innerHTML = 'Ошибка получения данных проектов';
+      });
+    }
+
 
   // Функция склонения слова "файл"
   function pluralFile(count) {
