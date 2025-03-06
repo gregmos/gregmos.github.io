@@ -196,29 +196,38 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Функция для получения информации о кредитах
-  function loadUserCredits() {
-    const token = storageGet('authToken');
-    if (!token) {
-      creditInfo.innerText = 'Ошибка авторизации';
-      return;
-    }
-    fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_user_info', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.credits !== undefined) {
-        creditInfo.innerText = "Осталось кредитов: " + data.credits;
-      } else {
-        creditInfo.innerText = "Ошибка получения данных";
+    function loadUserCredits() {
+      const token = storageGet('authToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!token) {
+        creditInfo.innerText = 'Ошибка авторизации';
+        return;
       }
-    })
-    .catch(err => {
-      console.error(err);
-      creditInfo.innerText = "Ошибка получения данных";
-    });
-  }
+      fetch('https://cases-kad-30bc963f9461.herokuapp.com/api/get_user_info', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'X-Refresh-Token': refreshToken
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.credits !== undefined) {
+          creditInfo.innerText = "Осталось кредитов: " + data.credits;
+          // Если сервер вернул новый access token, обновляем localStorage:
+          if (data.access_token) {
+            localStorage.setItem('authToken', data.access_token);
+          }
+        } else {
+          creditInfo.innerText = "Ошибка получения данных";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        creditInfo.innerText = "Ошибка получения данных";
+      });
+    }
+
 
   // Функция для загрузки проектов
     function loadProjects() {
